@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Distractful Jquery Slider Plugin V0.0.1</title>
+
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/src/css/distractful.css">
+    <link rel="stylesheet" href="/src/css/style.css">
+
+</head>
+<body>
+
+    <section class="distractful text-center">
+
+        <div class="distractful-item">
+            <img src="https://static.pexels.com/photos/58713/pexels-photo-58713-large.jpeg">
+            <div class="col-md-6 col-md-offset-3">
+                <h1 class="trigger makevisible effect-slidedown" style="transition: all 600ms ease;" data-delay="200" data-speed="600">Easy To Use</h1>
+                <p class="trigger makevisible effect-slideup" style="transition: all 600ms ease;" data-delay="300" data-speed="600">Full Screen Content Slider</p>
+                <a href="<?php echo bloginfo('url');?>/start-a-project/" class="btn-lg big-button trigger makevisible effect-zoomin" style="transition: all 600ms ease;" data-delay="400" data-speed="600">Download on Github</a>
+            </div>
+        </div>
+
+        <div class="distractful-item">
+            <img src="https://static.pexels.com/photos/58713/pexels-photo-58713-large.jpeg">
+            <div class="col-md-6 col-md-offset-3 text-left">
+                <h1 class="trigger-off makevisible effect-rotate" style="transition: all 600ms ease;" data-delay="200" data-speed="600">Use it How You Want</h1>
+                <p class="trigger-off makevisible effect-zoomout" style="transition: all 600ms ease;" data-delay="300" data-speed="600">Works With Basic HTML</p>
+                <a href="#" class="btn btn-lg big-button trigger-off makevisible effect-skew" style="transition: all 600ms ease;" data-delay="400" data-speed="600">Getting Started</a>
+            </div>
+        </div>
+
+        <div class="distractful-item">
+            <img src="https://static.pexels.com/photos/58713/pexels-photo-58713-large.jpeg">
+            <div class="col-md-6 col-md-offset-3 text-right">
+                <h1 class="trigger-off makevisible effect-slidefromleft" style="transition: all 600ms ease;" data-delay="200" data-speed="600">Use Any Image</h1>
+                <p class="trigger-off makevisible effect-slidefromleft" style="transition: all 600ms ease;" data-delay="300" data-speed="600">It'll Become a Full Size Background</p>
+                <a href="#" class="btn btn-lg big-button trigger-off makevisible effect-slidefromleft" style="transition: all 600ms ease;" data-delay="400" data-speed="600">Check Out The Options</a>
+            </div>
+        </div>
+
+            
+    </section>  
+    
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+<script src="/src/js/distractful.js"></script>
+<script>
+    $('section.distractful').distractful({
+        parallax: true,         // true || false
+        parallaxScroll: 215,    // How far the div will move. Default, no movement. lower num = faster
+        controls: true,         // moving || true || false. use false to hide
+        scrollSpeed: 1000,      // int. Default: 1000 (1 second)
+        easing: 'easeInOutExpo',// false || 'easingFunctionName. Use an easing function. Requires Easing library. Set to 'false' to disable, will use jQuery animate
+        auto: true,             // true  || false. default false. Turn on auto-play sliding.
+        autoDirection: 'right', // right || left. default right. Which direction does the auto-play go
+        pauseTime: 5000,        // int. How long until next slide. Default: 5000
+        hoverPause: true,       // true || false. default false. Hover over distractful to stop auto-play
+        showPagers: true,       // true || false. default true. Show the pagers
+        touch:true,             // true || false. default true. Turn on touch events for mobile
+        imageLoaded: function(){
+            console.log('images loaded, ready to slide')
+        },
+        slideComplete: function(){
+            console.log('slide done sliding')
+        },
+        slideRight: function(){
+            console.log('slide right done')
+        },
+        slideLeft: function(){
+            console.log('slide left done')
+        },
+        beforeSlide: function(){
+            console.log('loaded before sliding')
+        }
+    });
+</script>
+</body>
+</html>
