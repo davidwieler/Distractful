@@ -20,7 +20,7 @@
             <div class="col-md-6 col-md-offset-3">
                 <h1 class="trigger makevisible effect-slidedown" style="transition: all 600ms ease;" data-delay="200" data-speed="600">Easy To Use</h1>
                 <p class="trigger makevisible effect-slideup" style="transition: all 600ms ease;" data-delay="300" data-speed="600">Full Screen Content Slider</p>
-                <a href="<?php echo bloginfo('url');?>/start-a-project/" class="btn-lg big-button trigger makevisible effect-zoomin" style="transition: all 600ms ease;" data-delay="400" data-speed="600">Download on Github</a>
+                <a href="https://github.com/davidwieler/Distractful/archive/master.zip" class="btn-lg big-button trigger makevisible effect-zoomin" style="transition: all 600ms ease;" data-delay="400" data-speed="600">Download on Github</a>
             </div>
         </div>
 
@@ -49,34 +49,36 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
 <script src="src/js/distractful.js"></script>
 <script>
-    $('section.distractful').distractful({
-        parallax: true,         // true || false
-        parallaxScroll: 215,    // How far the div will move. Default, no movement. lower num = faster
-        controls: true,         // moving || true || false. use false to hide
-        scrollSpeed: 1000,      // int. Default: 1000 (1 second)
-        easing: 'easeInOutExpo',// false || 'easingFunctionName. Use an easing function. Requires Easing library. Set to 'false' to disable, will use jQuery animate
-        auto: true,             // true  || false. default false. Turn on auto-play sliding.
-        autoDirection: 'right', // right || left. default right. Which direction does the auto-play go
-        pauseTime: 5000,        // int. How long until next slide. Default: 5000
-        hoverPause: true,       // true || false. default false. Hover over distractful to stop auto-play
-        showPagers: true,       // true || false. default true. Show the pagers
-        touch:true,             // true || false. default true. Turn on touch events for mobile
+    var dist = $('section.distractful').distractful({
+        parallax: true,
+        parallaxScroll: 215, //How far the div will move. Default, no movement. lower num = faster
+        controls: true, //default: moving
+        scrollSpeed: 1000, //Default: 1000 (1 second)
+        easing: 'easeInOutExpo', 
+        auto: false, //default: false
+        autoDirection: 'right', //default:right
+        pauseTime: 5000, //How long until next slide. Default: 5000
+        hoverPause: true,
+        showPagers: true, //default: true
+        touch:true,
+        keyPress: false,       
         imageLoaded: function(){
-            console.log('images loaded, ready to slide')
+
         },
         slideComplete: function(){
-            console.log('slide done sliding')
+
         },
         slideRight: function(){
-            console.log('slide right done')
+            resetSliderAnimation();
         },
         slideLeft: function(){
-            console.log('slide left done')
+            resetSliderAnimation();
         },
         beforeSlide: function(){
-            console.log('loaded before sliding')
+
         }
     });
+
 </script>
 </body>
 </html>

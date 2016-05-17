@@ -2,21 +2,25 @@
 	
     $.fn.distractful = function (options) {
 
-		//Get window Dimensions
-		var windowW = parseFloat($(window).innerWidth());
-		var windowH = $(window).outerHeight();	
-		var halfHeight = ( windowH / 2 );
-		
 		var el = this;
 		var $slider = el;
 
 		var pagers = '',
-			controls = ''	
+			controls = '',
+			parallax = false,
+			windowW = parseFloat($(window).innerWidth()),
+			windowH = $(window).outerHeight(),
+			halfHeight = ( windowH / 2 )
+			pager_pos = 0,
+			last_pager = 0
+
 		
 		// set up default options 
 		var defaults = { 
 			parallax:  false,
-			controls: 'moving',		
+			controls: 'moving',
+			controlRight: false,
+			controlLeft: false,
 			scrollSpeed: 1000,
 			auto:false,
 			pauseTime: 5000,
@@ -24,6 +28,7 @@
 			easing: 'easeInCubic',
 			hoverPause: false, 
 			touch: true,
+			keyPress: false,
 			//Callbacks
 			imageLoaded : '',
 			slideComplete : '',
@@ -32,136 +37,174 @@
 			beforeSlide: ''
 		};	
 
-		//Override with user defined
-		var options = $.extend({}, defaults, options);
+		if ($(el).data('Distractful')) { return; }
 
-		var checkEasing = options.easing
-		if( options.easing !== false && !$.isFunction($.easing[checkEasing]) ){ // do something 
+		var init = function(options){
 
-			console.log('Easing Function is either invalid, or the easing plugin is not loaded')
-			console.log('To use easing, please load "//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js", immediately after the jquery script')
+			if ($(el).data('Distractful')) { return; }
 
-			return false;
-		}
+			//Override with user defined
+			var options = $.extend({}, defaults, options);
 
-		if(options.showPagers === true){pagers = '<div class="distractful-pagers"></div>';}
+			var checkEasing = options.easing
+			if( options.easing !== false && !$.isFunction($.easing[checkEasing]) ){ // do something 
 
-		if(options.controls !== false){
-			controls = '<div class="distractful-controls left"></div><div class="distractful-controls right"></div>';
-		}	
+				console.log('Easing Function is either invalid, or the easing plugin is not loaded')
+				console.log('To use easing, please load "//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js", immediately after the jquery script')
 
-		if(options.parallax === true){
-			this.addClass('isParallax');
-			this.after('<div class="distractfulParallaxPlaceholder" style="height:'+windowH+'px">'+controls+pagers+'</div>')
-
-			var next_content = $('.distractfulParallaxPlaceholder').next();
-
-			$(next_content[0]).css({position:'absolute'})
-		}
-		else{
-			$('body').addClass('distractful-body')
-			this.after(controls+pagers)
-		}  	  		
-
-		var controlsHeight = $('.distractful-controls').outerHeight();
-
-		var constrolsPosition = halfHeight - ( controlsHeight  );
-		$('.distractful-controls').css({'top':constrolsPosition})	
-
-		//Get item list
-		var item_data = []
-		var $item_data = $('.distractful-item');
-		var item_data_max = $item_data.length;
-		var item_count = 0;
-		var item_start = windowW;
-		var images = [];
-		if(options.parallax === true){
-			$(window).scroll(function (event) {
-			    var scroll = $(window).scrollTop();
-				if(options.controls === 'sticky'){
-					$('.distractful-controls').css({'position':'fixed'})
-				    if(scroll >= (constrolsPosition - 50)){
-				    	$('.distractful-controls').fadeOut(100)
-				    }
-				    else{
-				    	$('.distractful-controls').fadeIn(100)
-				    }
-				}
-				if(options.parallaxScroll >= 1){
-					$('.distractful').css({'top':(0-(scroll / options.parallaxScroll)*100)});
-				}
-			});		
-		}
-
-		var pos = 0;
-		var pager_pos = 0;
-		var last_pager = 0;
-
-		$item_data.each(function(){
-
-			$item_data.eq(0).addClass('first active');
-			$item_data.eq(item_data_max - 1).addClass('last');			
-
-			$(this).css({'height':windowH, 'width':windowW})
-			$(this).css({'left':item_start});			
-			item_count = (item_count + 1);
-			item_start = (item_start + windowW);
-
-
-			var obj = {}	
-
-			$(this).children().each(function(){
-				
-				item_data[item_count] = []
-
-				if($(this).is('img')){
-					images.push($(this).attr('src'))
-					obj = {'bg':$(this).attr('src')}
-				}
-				
-			})
-			$(this).css('background-image', 'url(' + obj.bg + ')');			
-
-		});
-
-		for (var i = item_count - 1; i >= 0; i--) {
-			$('.distractful-pagers').append('<div class="distractful-pager"><a href="#"></a></div>')
-		}
-		$('.distractful-item').wrapInner( "<div class='distractful-content'></div>");
-
-		if(item_count >= 2){
-
-			$('.distractful-item.first').clone().addClass('clone').appendTo(el).css({'left':(item_start)});
-			$('.distractful-item.last').clone().addClass('clone').prependTo(el).css({'left':'0'});
-			$('.distractful-item').removeClass('first last');
-			$('.distractful-pager:first-child').addClass('active')
-
-		}
-		else{
-			$('.distractful-item').eq(0).css({left:0})
-
-		}
-
-		this.css({'height':windowH, 'left':-1*windowW, 'width':item_start + ( windowW * 2 )})		
-
-		var promises = [];
-
-		for (var p = 0; p < images.length; p++) {
-		    (function(url, promise) {
-		        var img = new Image();
-		        img.onload = function() {
-		          promise.resolve();
-		        };
-		        img.src = url;
-		    })(images[p], promises[p] = $.Deferred());
-		}
-		$.when.apply($, promises).done(function() {
-
-			if(typeof options.imageLoaded === 'function'){
-				options.imageLoaded();
+				return false;
 			}
 
-		});
+			if(options.showPagers === true){pagers = '<div class="distractful-pagers"></div>';}
+
+			if(options.controls !== false){
+
+				if(options.controlRight){
+					controls += '<div class="distractful-controls right">'+options.controlRight+'</div>'
+				}
+				else{
+					controls += '<div class="default-controls distractful-controls right"></div>'
+				}
+				if(options.controlLeft){
+					controls += '<div class="distractful-controls left">'+options.controlLeft+'</div>'
+				}
+				else{
+					controls += '<div class="default-controls distractful-controls left"></div>'
+				}
+
+			}	
+
+			if(options.keyPress === true){
+				$(document).keydown(keyPress);
+			}
+
+			if(options.parallax === true){
+				isParallax = true
+				el.addClass('isParallax');
+				el.after('<div class="distractfulParallaxPlaceholder" style="height:'+windowH+'px">'+controls+pagers+'</div>')
+
+				var next_content = $('.distractfulParallaxPlaceholder').next();
+
+				$(next_content[0]).css({position:'absolute'})
+			}
+			else{
+				isParallax = false
+				el.addClass('isNotParallax');
+				$('body').addClass('distractful-body')
+				el.after(controls+pagers)
+			}
+
+
+			if(options.controls !== false){
+
+			}		  		
+
+			var controlsHeight = $('.distractful-controls').outerHeight();
+
+			var constrolsPosition = halfHeight - ( controlsHeight  );
+			$('.distractful-controls').css({'top':constrolsPosition})	
+
+			//Get item list
+			var item_data = []
+			var $item_data = $('.distractful-item');
+			var item_data_max = $item_data.length;
+			var item_count = 0;
+			var item_start = windowW;
+			var images = [];
+			if(options.parallax === true){
+				$(window).scroll(function (event) {
+				    var scroll = $(window).scrollTop();
+					if(options.controls === 'sticky'){
+						$('.distractful-controls').css({'position':'fixed'})
+					    if(scroll >= (constrolsPosition - 50)){
+					    	$('.distractful-controls').fadeOut(100)
+					    }
+					    else{
+					    	$('.distractful-controls').fadeIn(100)
+					    }
+					}
+					if(options.parallaxScroll >= 1){
+						$('.distractful').css({'top':(0-(scroll / options.parallaxScroll)*100)});
+					}
+				});		
+			}
+
+			$item_data.each(function(){
+
+				$item_data.eq(0).addClass('first active');
+				$item_data.eq(item_data_max - 1).addClass('last');			
+
+				$(this).css({'height':windowH, 'width':windowW})
+				$(this).css({'left':item_start});			
+				item_count = (item_count + 1);
+				item_start = (item_start + windowW);
+
+
+				var obj = {}	
+
+				$(this).children().each(function(){
+					
+					item_data[item_count] = []
+
+					if($(this).is('img')){
+						images.push($(this).attr('src'))
+						obj = {'bg':$(this).attr('src')}
+					}
+					
+				})
+				$(this).css('background-image', 'url(' + obj.bg + ')');			
+
+			});
+
+			for (var i = item_count - 1; i >= 0; i--) {
+				$('.distractful-pagers').append('<div class="distractful-pager"><a></a></div>')
+			}
+			$('.distractful-item').wrapInner( "<div class='distractful-content'></div>");
+
+			if(item_count >= 2){
+
+				$('.distractful-item.first').clone().addClass('clone').appendTo(el).css({'left':(item_start)});
+				$('.distractful-item.last').clone().addClass('clone').prependTo(el).css({'left':'0'});
+				$('.distractful-item').removeClass('first last');
+				$('.distractful-pager:first-child').addClass('active')
+
+			}
+			else{
+				$('.distractful-item').eq(0).css({left:0})
+
+			}
+
+			el.css({'height':windowH, 'left':-1*windowW, 'width':item_start + ( windowW * 2 )})		
+
+			var promises = [];
+
+			for (var p = 0; p < images.length; p++) {
+			    (function(url, promise) {
+			        var img = new Image();
+			        img.onload = function() {
+			          promise.resolve();
+			        };
+			        img.src = url;
+			    })(images[p], promises[p] = $.Deferred());
+			}
+			$.when.apply($, promises).done(function() {
+
+				if(typeof options.imageLoaded === 'function'){
+					options.imageLoaded();
+				}
+
+			});
+
+			el.data({
+				Distractful: true,
+				num_slides: item_count,
+				element: el.selector,
+				options: options
+
+			})
+
+
+		}	
 
 		if(options.auto === true){
 
@@ -236,32 +279,17 @@
 				if(typeof diff == 'undefined'){return}
 
 				if (diff <= -50) {
-					moveLeft()
+					el.slideLeft()
 					return
 				}
 				if (diff >= 50) {
-					moveRight()
+					el.slideRight()
 					return
 				}    
 
 	        })
 
-    	} 
-		
-		function moveLeft(){
-			var evt ={
-				delta: -1,
-				dir: 'left'
-			}
-			move(evt)			
-		}
-		function moveRight(){
-			var evt ={
-				delta: 1,
-				dir: 'right'
-			}
-			move(evt)			
-		}
+    	}
 
 		/*******************************
 		 *
@@ -269,7 +297,7 @@
 		 * 
 		 *//////////////////////////////    	
 
-		function move(evt) {
+		var move = function(evt) {
 
 			if(typeof options.beforeSlide === 'function'){
 				options.beforeSlide();
@@ -279,12 +307,12 @@
 			$('.distractful-item').removeClass('active')
 			$('.distractful-pager').removeClass('active').prop('disabled', true)
 
-	        var $items = el.children(),
-		        $pagers = $('.distractful-pagers').children(),
-		        max = $items.length,
-		        pager_max = $pagers.length,
-		        newMoveAmount = '',
-		        moveAmount = $(window).innerWidth();
+			var $items = el.children(),				
+				$pagers = $('.distractful-pagers').children(),
+				pager_max = $pagers.length
+				item_max = $items.length,
+				moveAmount = $(window).outerWidth(),
+				newMoveAmount = ''
 
 		    var transform = el.css('transform').split(/[()]/)[1]
 
@@ -292,8 +320,6 @@
 			    newMoveAmount = transform.split(',')[4]
 			    moveAmount = moveAmount - Math.abs(newMoveAmount)
 			}
-
-		    pos = (pos + evt.delta) % max; // update the position
 
 	        if(evt.paged === true){
 		    	pager_pos = evt.index;
@@ -303,95 +329,131 @@
 		    	pager_pos = (pager_pos + evt.delta) % pager_max;
 	        }
 
-	        
+	        var slideData = {
+	        	item_max: item_max,
+	        	pager_pos: pager_pos,
+	        	pager_max: pager_max,
+	        	newMoveAmount: newMoveAmount,
+	        	moveAmount: moveAmount,
+	        	items: $items
+	        	
+	        }   	        
+
+    		if(isParallax === false){
+    			//moveEl = $('.distractful-item')
+    			slideData.parallax = false
+    		}
+    		else{        	
+    			//moveEl = el
+    			slideData.parallax = true
+	        }
 
         	if(evt.dir === 'right'){
-
-				el.animate({'left':'-='+moveAmount+'px'}, {duration:options.scrollSpeed, easing: options.easing, complete: function() {
-
-					//If we make it to the last slide, reset back to the first cloned duplicate so we can slide infinite amounts
-					if(pos == (max - 2) || pager_pos === 0 ){
-						pos = 0;
-						pager_pos = 0;
-						el.css({'left':-1*moveAmount})
-					}
-
-					//If we used a touch event, we need to remove the transform (drag) attribute, then reset the left spacing
-					if(newMoveAmount){
-
-						el.css({'transform': '', 'left': parseInt(el.css('left')) - Math.abs(newMoveAmount)  })  
-
-					} 
-
-	        		//Fire the slideRight function
-					if(typeof options.slideRight === 'function'){
-						options.slideRight()
-					}
-
-					//Fire the slideComplete function
-					if(typeof options.slideComplete === 'function'){
-						options.slideComplete()
-					}
-
-					$('.distractful-pager, .distractful-controls').prop('disabled', false)
-
-		        	$items.eq(pos+1).addClass('active')
-
-		        	last_pager = pager_pos
-
-		        	$pagers.eq(pager_pos).addClass('active')
-
-				}});
+        		moveDirMath = '-='
         	}
         	else{
-        		el.animate({'left':'+='+moveAmount+'px'}, {duration:options.scrollSpeed, easing: options.easing, complete: function() {
+        		moveDirMath = '+='
+        	}     	
 
-        			//If we make it to the first slide, reset back to the last cloned duplicate so we can slide infinite amounts
-	        		if(pos == -1 || pager_pos == pager_max || pos == 0){
-	        			pos = (max - 2)
-						pager_pos = pager_max - 1
-	        			el.css({'left':-Math.abs((max - 2)*moveAmount)})
+        	notParallaxCount = 0        	
 
-	        		}        			
+    		el.animate({'left': moveDirMath+slideData.moveAmount+'px'}, {duration:options.scrollSpeed, easing: options.easing})
+    		.promise().then(function(){
 
-					//If we used a touch event, we need to remove the transform (drag) attribute, then reset the left spacing
-					if(newMoveAmount){
+    			if(slideData.newMoveAmount != ''){
+    				el.css({'transform': ''})
+    			}
 
-						if(pos == (max - 2)){
-							el.css({'transform': '', 'left': -Math.abs(windowW * (max - 2))})  
+    			switch(evt.dir){
+
+    				case 'right':
+
+		    			if(slideData.pager_pos === 0){
+		    				el.css({'left':-1*slideData.moveAmount})
+		    			}
+
+		    			if(slideData.newMoveAmount != ''){
+		    				el.css({'left': parseInt(el.css('left')) - Math.abs(slideData.newMoveAmount)  })  
+		    			}
+
+			    		//Fire the slideRight function
+						if(typeof options.slideRight === 'function'){
+							options.slideRight()
 						}
-						else{
-							el.css({'transform': '', 'left': parseInt(el.css('left')) + Math.abs(newMoveAmount)  }) 
+
+    				break;
+
+    				case 'left' :
+
+		    			if(slideData.pager_pos === -1){
+
+		    				pager_pos = ( slideData.pager_max - 1 )
+
+		    				if(slideData.newMoveAmount != ''){
+		    					el.css({'left': -Math.abs(windowW * (slideData.item_max - 2))}) 
+		    				}
+		    				else{
+		    					el.css({'left':-Math.abs((slideData.item_max - 2)*slideData.moveAmount)})
+		    				}
+		    			}
+		    			else{
+
+			    			if(slideData.newMoveAmount != ''){
+			    				el.css({'left': parseInt(el.css('left')) + Math.abs(slideData.newMoveAmount)  })  
+			    			}	
+		    			}	    			
+
+						//Fire the slideLeft function
+			    		if(typeof options.slideLeft=== 'function'){
+							options.slideLeft()
 						}
 
-					}         			
+    				break;
+    			}
 
-        			//Fire the slideRight function
-	        		if(typeof options.slideLeft=== 'function'){
-						options.slideLeft()
-					}
+				$('.distractful-controls').prop('disabled', false)
+				$('.distractful-item')
+				$('.distractful-pager').prop('disabled', false)
 
-					//Fire the slideComplete function
-					if(typeof options.slideComplete === 'function'){
-						options.slideComplete()
-						
-					}				
+				
 
-					$('.distractful-pager, .distractful-controls').prop('disabled', false)
+				$items.eq(pager_pos+1).addClass('active')
+				$pagers.eq(pager_pos).addClass('active')
+				last_pager = pager_pos	
 
-		        	$items.eq(pos+1).addClass('active');
-
-		        	last_pager = pager_pos;
-
-		        	$pagers.eq(pager_pos).addClass('active')
-				}});
-        	}
-
-
-
-
+				//Fire the slideComplete function
+				if(typeof options.slideComplete === 'function'){
+					options.slideComplete()
+					
+				}
+    		});		        
 
 	    }
+
+		/*******************************
+		 *
+		 * Handle Keyboard usage
+		 * 
+		 *//////////////////////////////	    
+
+		var keyPress = function(e){
+
+			var activeElementTag = document.activeElement.tagName.toLowerCase(),
+				tagFilters = 'input|textarea',
+				p = new RegExp(activeElementTag,['i']),
+				result = p.exec(tagFilters);
+
+			if (result == null && el.isVisible()) {
+				if (e.keyCode === 39) {
+					el.slideRight()
+					return false;
+				} else if (e.keyCode === 37) {
+					el.slideLeft()
+					return false;
+				}
+			}
+
+		}
 
 		/*******************************
 		 *
@@ -405,7 +467,8 @@
 
 	    	var newwindowH = $(window).outerHeight(),
 	    	    newwindowW = parseFloat($(window).innerWidth()),
-	    	    newitem_start = 0;
+	    	    newitem_start = 0,
+	    	    newHalfHeight = ( newwindowH / 2 )
 
 	    	if($(window).width() != width){
 
@@ -424,6 +487,11 @@
 
 				});	
 
+			var newControlsHeight = $('.distractful-controls').outerHeight();
+
+			var newConstrolsPosition = newHalfHeight - ( newControlsHeight  );
+			$('.distractful-controls').css({'top':newConstrolsPosition})				
+
 				width = $(window).width()	
 
 				el.css({'width':$newitem_data.length * newwindowW})
@@ -439,9 +507,8 @@
 		 *//////////////////////////////    	    
 
 		$('body')
-		.on('click', '.distractful-controls.left', moveLeft)
-        .on('click', '.distractful-controls.right', moveRight)
-        
+		.on('click', '.distractful-controls.left', function(){el.slideLeft()})
+        .on('click', '.distractful-controls.right', function(){el.slideRight()})
 
 		/*******************************
 		 *
@@ -453,27 +520,81 @@
 
 			if(!$(this).hasClass('active')){
 				var index = $('.distractful-pager').index( this );
-				var evt = {index:index, paged: true}
-
-				if(last_pager > index){
-
-					evt.dir = 'left';
-
-				}
-				else{
-
-					evt.dir = 'right';
-
-				}
-
-				var newDelta = (index - last_pager)
-				evt.delta = newDelta
-
-				last_pager = index	
-
-				move(evt)
+				dist.goToSlide(index)
 			}
-		}) 	    
+		})
+
+		el.slideLeft = function(){
+			var evt ={
+				delta: -1,
+				dir: 'left'
+			}
+			move(evt)			
+		}
+
+		el.slideRight = function(){
+			var evt ={
+				delta: 1,
+				dir: 'right'
+			}
+			move(evt)			
+		}
+
+		el.getSlidePosition = function(){
+			return pager_pos;
+		}
+
+		el.getSlideCount = function(){
+			return el.children().length - 2;
+		}
+
+		el.getSlideElement = function(index){
+			return el.children().eq(index + 1);
+		}
+
+		el.goToSlide = function(slideNum){
+
+			var index = slideNum
+
+			var evt = {index:index, paged: true}
+
+			if(last_pager > index){
+				evt.dir = 'left';
+			}
+			else{
+				evt.dir = 'right';
+			}
+
+			var newDelta = (index - last_pager)
+			evt.delta = newDelta
+			last_pager = index	
+
+			move(evt)
+
+		}
+
+		el.isVisible = function(){
+			var win = $(window),
+				viewport = {
+					top: win.scrollTop(),
+					left: win.scrollLeft()
+				},
+				bounds = el.offset();
+
+			viewport.right = viewport.left + win.width();
+			viewport.bottom = viewport.top + win.height();
+			bounds.right = bounds.left + el.outerWidth();
+			bounds.bottom = bounds.top + el.outerHeight();
+
+			return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
+   
+
+		}
+
+
+		init(options)
+
+		return this;    
 
 	}
 }(jQuery));
